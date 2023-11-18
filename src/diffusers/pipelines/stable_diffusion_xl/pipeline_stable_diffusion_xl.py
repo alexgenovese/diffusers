@@ -1038,9 +1038,8 @@ class StableDiffusionXLPipeline(
                     end_cfg_boolean = i / num_inference_steps > end_cfg
                     end_cfg_calc = i / num_inference_steps
                     print(f"CFG {end_cfg_calc} > {end_cfg} --> {end_cfg_calc}")
-                    if end_cfg_boolean and self.do_classifier_free_guidance:
+                    if end_cfg_boolean:
                         print(f"CFG optimization is enabled: CURRENT_CFG: {end_cfg_calc} - END_CFG: {end_cfg}")
-                        self.do_classifier_free_guidance = False 
                         prompt_embeds = torch.chunk(prompt_embeds, 2, dim=0)[-1]
                         add_text_embeds = torch.chunk(add_text_embeds, 2, dim=0)[-1]
                         add_time_ids = torch.chunk(add_time_ids, 2, dim=0)[-1]
