@@ -177,6 +177,7 @@ class StableDiffusionXLImg2ImgPipeline(
         requires_aesthetics_score: bool = False,
         force_zeros_for_empty_prompt: bool = True,
         add_watermarker: Optional[bool] = None,
+        end_cfg: Optional[float] = None
     ):
         super().__init__()
 
@@ -499,6 +500,7 @@ class StableDiffusionXLImg2ImgPipeline(
         prompt_embeds=None,
         negative_prompt_embeds=None,
         callback_on_step_end_tensor_inputs=None,
+        end_cfg=None,
     ):
         if strength < 0 or strength > 1:
             raise ValueError(f"The value of strength should in [0.0, 1.0] but is {strength}")
@@ -864,6 +866,7 @@ class StableDiffusionXLImg2ImgPipeline(
         clip_skip: Optional[int] = None,
         callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        end_cfg : Optional[float] = None,
         **kwargs,
     ):
         r"""
@@ -1043,6 +1046,7 @@ class StableDiffusionXLImg2ImgPipeline(
             prompt_embeds,
             negative_prompt_embeds,
             callback_on_step_end_tensor_inputs,
+            end_cfg,
         )
 
         self._guidance_scale = guidance_scale
@@ -1197,6 +1201,17 @@ class StableDiffusionXLImg2ImgPipeline(
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
+                # when we hit end_cfg steps, turn CFG off 
+                if end_cfg is not None: 
+                    end_cfg_boolean = i / num_inference_steps > end_cfg
+                    end_cfg_calc = i / num_inference_steps
+                    print(f"CFG {end_cfg_calc} > {end_cfg} --> {end_cfg_calc}")
+                    if end_cfg_boolean:
+                        print(f"CFG optimization is enabled: CURRENT_CFG: {end_cfg_calc} - END_CFG: {end_cfg}")
+                        prompt_embeds = torch.chunk(prompt_embeds, 2, dim=0)[-1]
+                        add_text_embeds = torch.chunk(add_text_embeds, 2, dim=0)[-1]
+                        add_time_ids = torch.chunk(add_time_ids, 2, dim=0)[-1]
+                        
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
