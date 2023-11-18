@@ -163,6 +163,7 @@ class StableDiffusionXLPipeline(
         scheduler: KarrasDiffusionSchedulers,
         force_zeros_for_empty_prompt: bool = True,
         add_watermarker: Optional[bool] = None,
+        end_cfg: Optional[float] = None,
     ):
         super().__init__()
 
@@ -487,6 +488,7 @@ class StableDiffusionXLPipeline(
         pooled_prompt_embeds=None,
         negative_pooled_prompt_embeds=None,
         callback_on_step_end_tensor_inputs=None,
+        end_cfg=None,
     ):
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
